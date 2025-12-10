@@ -50,3 +50,22 @@ export function createUser(input: CreateUserInput): UserRow {
   }
   return newUser;
 }
+export function updateUser(
+  id: number,
+  data: Partial<UserRow>
+): UserRow | undefined {
+  const fields = Object.keys(data);
+  if (fields.length === 0) return findUserById(id);
+
+  const setClauses = fields.map((f) => `${f} = ?`).join(", ");
+  const values = Object.values(data);
+  const now = new Date().toISOString();
+
+  const stmt = db.prepare(
+    `UPDATE users SET ${setClauses}, updated_at = ? WHERE id = ?`
+  );
+
+  stmt.run(...values, now, id);
+
+  return findUserById(id);
+}

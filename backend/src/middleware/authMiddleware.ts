@@ -1,26 +1,36 @@
 import { Request, Response, NextFunction } from "express";
-import { verifyAccessToken } from "../utils/jwt";
+import jwt from "jsonwebtoken";
+import { ENV } from "../config/env";
 
 export interface AuthedRequest extends Request {
   userId?: number;
 }
 
+// Middleware yêu cầu login
 export function requireAuth(
   req: AuthedRequest,
   res: Response,
   next: NextFunction
 ) {
-  const header = req.headers.authorization;
-  if (!header?.startsWith("Bearer ")) {
-    return res.status(401).json({ message: "Missing token" });
+  // Authorization: Bearer <token>
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader) {
+    return res.status(401).json({ message: "Missing Authorization header" });
   }
 
-  const token = header.slice(7);
+  const [scheme, token] = authHeader.split(" ");
+
+  if (scheme !== "Bearer" || !token) {
+    return res.status(401).json({ message: "Invalid Authorization format" });
+  }
+
   try {
-    const payload = verifyAccessToken(token);
-    req.userId = payload.userId;
+    const decoded = jwt.verify(token, ENV.JWT_SECRET) as { userId: number };
+
+    req.userId = decoded.userId;
     next();
-  } catch {
-    return res.status(401).json({ message: "Invalid token" });
+  } catch (err) {
+    return res.status(401).json({ message: "Invalid or expired token" });
   }
 }
