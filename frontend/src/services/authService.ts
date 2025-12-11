@@ -1,18 +1,20 @@
+// src/services/authService.ts
 import { apiRequest } from "./api";
 
 export interface AuthUser {
   id: number;
   email: string;
+  first_name?: string;
+  last_name?: string;
   firstName?: string;
   lastName?: string;
-  full_name?: string;
-  role?: string;
-  // thêm field khác nếu backend trả về
+  age?: number;
+  // ... nếu backend trả thêm gì thì bổ sung sau
 }
 
 export interface LoginResponse {
-  token: string;
   user: AuthUser;
+  accessToken: string;
 }
 
 export interface RegisterPayload {

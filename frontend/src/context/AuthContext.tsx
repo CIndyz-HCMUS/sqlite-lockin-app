@@ -1,77 +1,77 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
-import { loginApi, LoginResponse, AuthUser } from "../services/authService";
+import React, { createContext, useContext, useState } from "react";
 import {
-  clearAuth,
-  loadAuth,
-  saveAuth,
-} from "../utils/authStorage";
+  AuthResponse,
+  loginApi,
+  registerApi,
+  RegisterPayload,
+  UserDto,
+} from "../services/authService";
 
 interface AuthState {
-  user: AuthUser | null;
+  user: UserDto | null;
   token: string | null;
-  loading: boolean;
-  error: string | null;
+}
+
+interface AuthContextValue extends AuthState {
   login: (email: string, password: string) => Promise<void>;
+  register: (payload: RegisterPayload) => Promise<void>;
   logout: () => void;
 }
 
-const AuthContext = createContext<AuthState | undefined>(undefined);
+const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+
+const AUTH_STORAGE_KEY = "lockin_auth";
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [token, setToken] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  // load từ localStorage khi mở app
-  useEffect(() => {
-    const stored = loadAuth();
-    if (stored) {
-      setUser(stored.user);
-      setToken(stored.token);
+  const [state, setState] = useState<AuthState>(() => {
+    const raw = localStorage.getItem(AUTH_STORAGE_KEY);
+    if (!raw) return { user: null, token: null };
+    try {
+      const parsed = JSON.parse(raw) as AuthResponse;
+      return { user: parsed.user, token: parsed.token };
+    } catch {
+      return { user: null, token: null };
     }
-  }, []);
+  });
+
+  const saveAuth = (auth: AuthResponse) => {
+    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(auth));
+    setState({ user: auth.user, token: auth.token });
+  };
 
   const login = async (email: string, password: string) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res: LoginResponse = await loginApi(email, password);
-      setUser(res.user);
-      setToken(res.token);
-      saveAuth({ user: res.user, token: res.token });
-    } catch (err: any) {
-      setError(err.message || "Login failed");
-      throw err;
-    } finally {
-      setLoading(false);
-    }
+    const auth = await loginApi(email, password);
+    saveAuth(auth);
+  };
+
+  const register = async (payload: RegisterPayload) => {
+    const auth = await registerApi(payload);
+    saveAuth(auth);
   };
 
   const logout = () => {
-    setUser(null);
-    setToken(null);
-    clearAuth();
+    localStorage.removeItem(AUTH_STORAGE_KEY);
+    setState({ user: null, token: null });
   };
 
-  const value: AuthState = {
-    user,
-    token,
-    loading,
-    error,
-    login,
-    logout,
-  };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider
+      value={{
+        ...state,
+        login,
+        register,
+        logout,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
 export function useAuth() {
   const ctx = useContext(AuthContext);
-  if (!ctx) {
-    throw new Error("useAuth must be used within AuthProvider");
-  }
+  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
   return ctx;
 }

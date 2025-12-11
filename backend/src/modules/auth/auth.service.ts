@@ -1,67 +1,56 @@
-import {
-  createUser,
-  findUserByEmail,
-} from "../users/user.repo";
-import { RegisterInput } from "./auth.types";
-import { hashPassword, comparePassword } from "../../utils/password";
-import { signAccessToken } from "../../utils/jwt";
-import { sanitizeUser } from "../users/user.service";
+// frontend/src/services/authService.ts
+import { apiRequest } from "./api";
 
-export function register(input: RegisterInput) {
-  const existing = findUserByEmail(input.email);
-  if (existing) {
-    const err = new Error("EMAIL_EXISTS");
-    // @ts-ignore
-    err.status = 409;
-    throw err;
-  }
-
-  const passwordHash = hashPassword(input.password);
-
-  const user = createUser({
-    email: input.email,
-    passwordHash,
-    firstName: input.firstName,
-    lastName: input.lastName,
-    age: input.age,
-    gender: input.gender,
-    heightCm: input.heightCm,
-    weightKg: input.weightKg,
-    activityLevel: input.activityLevel,
-    goalType: input.goalType,
-    targetWeightKg: input.targetWeightKg,
-    dailyCalorieAdjustment: input.dailyCalorieAdjustment,
-  });
-
-  const accessToken = signAccessToken({ userId: user.id });
-
-  return {
-    user: sanitizeUser(user),
-    accessToken,
-  };
+export interface UserDto {
+  id: number;
+  email: string;
+  firstName: string;
+  lastName: string;
+  age?: number | null;
+  gender?: string | null;
+  heightCm?: number | null;
+  weightKg?: number | null;
+  activityLevel?: string | null;
+  goalType?: string | null;
+  targetWeightKg?: number | null;
+  dailyCalorieAdjustment?: number | null;
 }
 
-export function login(email: string, password: string) {
-  const user = findUserByEmail(email);
-  if (!user) {
-    const err = new Error("INVALID_CREDENTIALS");
-    // @ts-ignore
-    err.status = 401;
-    throw err;
-  }
+export interface AuthResponse {
+  token: string;
+  user: UserDto;
+}
 
-  const ok = comparePassword(password, user.password_hash);
-  if (!ok) {
-    const err = new Error("INVALID_CREDENTIALS");
-    // @ts-ignore
-    err.status = 401;
-    throw err;
-  }
+export async function loginApi(email: string, password: string) {
+  return apiRequest<AuthResponse>("/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ email, password }),
+  });
+}
 
-  const accessToken = signAccessToken({ userId: user.id });
+/**
+ * Payload đăng kí: phần thông tin cơ bản ở màn Sign Up
+ * + phần info ở màn Get Started (weight, height, gender,...)
+ * Bạn chỉ cần chắc là chỗ gọi registerApi truyền đủ fields này.
+ */
+export interface RegisterPayload {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  age?: number;
+  gender?: string;
+  heightCm?: number;
+  weightKg?: number;
+  activityLevel?: string;
+  goalType?: string;
+  targetWeightKg?: number;
+  dailyCalorieAdjustment?: number;
+}
 
-  return {
-    user: sanitizeUser(user),
-    accessToken,
-  };
+export async function registerApi(payload: RegisterPayload) {
+  return apiRequest<AuthResponse>("/auth/register", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 }

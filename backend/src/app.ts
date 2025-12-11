@@ -10,7 +10,7 @@ import { errorHandler } from "./middleware/errorHandler";
 import { uploadRouter } from "./modules/upload/upload.routes";
 
 import { foodRouter } from "./modules/foods/food.routes";
-import { exerciseRouter } from "./modules/exercises/exercise.routes";
+import { exerciseRouter } from "./modules/exercise/exercise.routes";
 
 import { mealLogRouter } from "./modules/logs/mealLog.routes";
 import { workoutLogRouter } from "./modules/logs/workoutLog.routes";

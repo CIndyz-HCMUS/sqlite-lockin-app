@@ -5,7 +5,7 @@ import {
   WorkoutLogDTO,
   WorkoutLogRow,
 } from "./workoutLog.types";
-import { ExerciseRow } from "../exercises/exercise.types";
+import { ExerciseRow } from "../exercise/exercise.types";
 
 function getExerciseById(id: number): ExerciseRow | undefined {
   const stmt = db.prepare("SELECT * FROM exercises WHERE id = ?");

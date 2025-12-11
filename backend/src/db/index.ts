@@ -1,3 +1,4 @@
+// backend/src/db/index.ts
 import Database from "better-sqlite3";
 import fs from "fs";
 import path from "path";
@@ -5,10 +6,28 @@ import { ENV } from "../config/env";
 
 const dbFilePath = path.resolve(process.cwd(), ENV.DB_PATH);
 
-// Export instance DB dùng cho toàn app
+// Instance DB dùng cho toàn app
 export const db = new Database(dbFilePath);
 
-// Export HÀM runMigrations (named export)
+// ===== Helpers dùng với async/await =====
+
+// SELECT: trả về { rows: T[] }
+export async function query<T = any>(
+  sql: string,
+  params: any[] = []
+): Promise<{ rows: T[] }> {
+  const stmt = db.prepare(sql);
+  const rows = stmt.all(...params) as T[];
+  return { rows };
+}
+
+// INSERT/UPDATE/DELETE: không cần trả gì
+export async function run(sql: string, params: any[] = []): Promise<void> {
+  const stmt = db.prepare(sql);
+  stmt.run(...params);
+}
+
+// ===== Migrations =====
 export function runMigrations(): void {
   const migrationsDir = path.join(__dirname, "migrations");
 

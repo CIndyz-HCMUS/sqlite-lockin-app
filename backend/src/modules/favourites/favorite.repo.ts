@@ -1,7 +1,7 @@
 import { db } from "../../db";
 import { CreateFavoriteInput, FavoriteDTO, FavoriteItemType, FavoriteRow } from "./favorite.types";
 import { FoodRow } from "../foods/food.types";
-import { ExerciseRow } from "../exercises/exercise.types";
+import { ExerciseRow } from "../exercise/exercise.types";
 
 function toDTO(row: FavoriteRow): FavoriteDTO {
   return {
