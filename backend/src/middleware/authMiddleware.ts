@@ -1,9 +1,10 @@
+// backend/src/middleware/authMiddleware.ts
 import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
-import { ENV } from "../config/env";
+import { verifyAccessToken, AccessTokenPayload } from "../utils/jwt";
 
 export interface AuthedRequest extends Request {
   userId?: number;
+  user?: AccessTokenPayload;
 }
 
 // Middleware yêu cầu login
@@ -12,7 +13,7 @@ export function requireAuth(
   res: Response,
   next: NextFunction
 ) {
-  // Authorization: Bearer <token>
+  // Header dạng: Authorization: Bearer <token>
   const authHeader = req.headers.authorization;
 
   if (!authHeader) {
@@ -26,9 +27,12 @@ export function requireAuth(
   }
 
   try {
-    const decoded = jwt.verify(token, ENV.JWT_SECRET) as { userId: number };
+    const decoded = verifyAccessToken(token);
 
+    // Lưu user vào request để routes dùng lại
     req.userId = decoded.userId;
+    req.user = decoded;
+
     next();
   } catch (err) {
     return res.status(401).json({ message: "Invalid or expired token" });

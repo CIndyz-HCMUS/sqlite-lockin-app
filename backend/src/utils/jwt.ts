@@ -2,18 +2,19 @@
 import jwt, { SignOptions } from "jsonwebtoken";
 import { ENV } from "../config/env";
 
-const JWT_SECRET = ENV.JWT_SECRET || "dev-secret";
-
 // Kiểu payload bên trong access token
 export interface AccessTokenPayload {
   userId: number;
   email: string;
 }
 
-// kiểu của expiresIn trong SignOptions
+// SECRET đọc từ ENV (có thể fallback dev-secret)
+const JWT_SECRET = ENV.JWT_SECRET || "dev-secret";
+
+// thời gian sống của access token
 const ACCESS_TOKEN_EXPIRES_IN: SignOptions["expiresIn"] = "7d";
 
-// Hàm dùng cho auth.service.ts
+// Hàm dùng cho auth.service.ts (và các nơi khác)
 export function signAccessToken(payload: AccessTokenPayload): string {
   return jwt.sign(payload, JWT_SECRET, {
     expiresIn: ACCESS_TOKEN_EXPIRES_IN,
@@ -25,6 +26,6 @@ export function verifyAccessToken(token: string): AccessTokenPayload {
   return jwt.verify(token, JWT_SECRET) as AccessTokenPayload;
 }
 
-// Nếu chỗ khác trong code có dùng signToken / verifyToken thì alias luôn
+// Alias nếu chỗ khác dùng signToken / verifyToken
 export const signToken = signAccessToken;
 export const verifyToken = verifyAccessToken;

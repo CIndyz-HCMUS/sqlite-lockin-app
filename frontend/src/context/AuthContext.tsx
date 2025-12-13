@@ -1,3 +1,4 @@
+// src/context/AuthContext.tsx
 import React, { createContext, useContext, useState } from "react";
 import {
   AuthResponse,
@@ -28,6 +29,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [state, setState] = useState<AuthState>(() => {
     const raw = localStorage.getItem(AUTH_STORAGE_KEY);
     if (!raw) return { user: null, token: null };
+
     try {
       const parsed = JSON.parse(raw) as AuthResponse;
       return { user: parsed.user, token: parsed.token };

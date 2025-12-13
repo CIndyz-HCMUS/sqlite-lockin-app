@@ -1,22 +1,39 @@
 // src/services/authService.ts
 import { apiRequest } from "./api";
 
-export interface AuthUser {
+export interface UserDto {
   id: number;
   email: string;
-  first_name?: string;
-  last_name?: string;
-  firstName?: string;
-  lastName?: string;
-  age?: number;
-  // ... nếu backend trả thêm gì thì bổ sung sau
+  firstName: string;
+  lastName: string;
+  age?: number | null;
+  gender?: string | null;
+  heightCm?: number | null;
+  weightKg?: number | null;
+  activityLevel?: string | null;
+  goalType?: string | null;
+  targetWeightKg?: number | null;
+  dailyCalorieAdjustment?: number | null;
 }
 
-export interface LoginResponse {
-  user: AuthUser;
-  accessToken: string;
+export interface AuthResponse {
+  token: string;
+  user: UserDto;
 }
 
+/**
+ * Gọi API login
+ */
+export async function loginApi(email: string, password: string) {
+  return apiRequest<AuthResponse>("/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ email, password }),
+  });
+}
+
+/**
+ * Payload đăng kí: phần thông tin cơ bản + info ở màn Get Started
+ */
 export interface RegisterPayload {
   email: string;
   password: string;
@@ -32,20 +49,11 @@ export interface RegisterPayload {
   dailyCalorieAdjustment?: number;
 }
 
-export async function loginApi(
-  email: string,
-  password: string
-): Promise<LoginResponse> {
-  return apiRequest<LoginResponse>("/auth/login", {
-    method: "POST",
-    body: JSON.stringify({ email, password }),
-  });
-}
-
-export async function registerApi(
-  payload: RegisterPayload
-): Promise<LoginResponse> {
-  return apiRequest<LoginResponse>("/auth/register", {
+/**
+ * Gọi API register
+ */
+export async function registerApi(payload: RegisterPayload) {
+  return apiRequest<AuthResponse>("/auth/register", {
     method: "POST",
     body: JSON.stringify(payload),
   });

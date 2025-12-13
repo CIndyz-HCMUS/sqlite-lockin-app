@@ -7,6 +7,10 @@ import { authRouter } from "./modules/auth/auth.routes"; // 👈 named import
 import statsRouter from "./routes/stats.routes";         // statsRouter vẫn default như đã viết
 import { mealRouter } from "./modules/meal/meal.routes";
 import { foodRouter } from "./modules/foods/food.routes";
+
+import { exerciseRouter } from "./modules/exercise/exercise.routes";
+import { workoutRouter } from "./modules/workout/workout.routes";
+
 const app = express();
 
 runMigrations();
@@ -18,6 +22,9 @@ app.use("/auth", authRouter);
 app.use("/stats", statsRouter);
 app.use("/foods", foodRouter);
 app.use("/meal-logs", mealRouter);
+
+app.use("/exercises", exerciseRouter);
+app.use("/workout-logs", workoutRouter);
 
 const PORT = ENV.PORT || 3000;
 
